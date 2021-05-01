@@ -2,8 +2,8 @@ const express = require("express");
 const app = express();
 const PORT = 3000;
 const log4js = require("log4js");
-const log = log4js.getlog();
-logger.level = "debug";
+const log = log4js.getLogger("entrypoint");
+log.level = "info";
 
 // * Routing
 app.get("/", (req, res) => {
