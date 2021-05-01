@@ -8,87 +8,62 @@ log.level = "info";
 // * @route   POST /api/auth/register
 // @desc      Signup new user
 // @access    Public
-// exports.register = asyncHandler(async (req, res, next) => {
-//   const { name, email, password } = req.body;
+exports.register = asyncHandler(async (req, res, next) => {
+  const { name, email, password } = req.body;
 
-//   // * Check Double Email
-//   const isExist = await User.findOne({ email: email });
-//   if (isExist) {
-//     return res
-//       .status(400)
-//       .json({ success: false, message: "Email Already Exist" });
-//   }
+  // * Check Double Email
+  const isExist = await User.findOne({ email: email });
+  if (isExist) {
+    return res
+      .status(400)
+      .json({ success: false, message: "Email Already Exist" });
+  }
 
-//   // * Hash Password
-//   const hashedPw = await bcrypt.hash(password, 12);
+  // * Hash Password
+  const hashedPw = await bcrypt.hash(password, 12);
 
-//   // * Generate Api_Key
-//   const apiKey = uniqid() + uniqid.process();
+  const user = new User({
+    name,
+    email,
+    password: hashedPw,
+  });
+  await user.save();
 
-//   // * Generate Bigchain Key
-//   const bigchainKey = new driver.Ed25519Keypair();
-
-//   const user = new User({
-//     name,
-//     email,
-//     password: hashedPw,
-//     apiKey,
-//     privateKey: bigchainKey.privateKey,
-//     publicKey: bigchainKey.publicKey,
-//   });
-//   await user.save();
-
-//   res.status(200).json({
-//     success: true,
-//     data: { name, email, apiKey },
-//   });
-// });
+  res.status(200).json({
+    success: true,
+    data: { name, email },
+  });
+});
 
 // * @route   POST /api/auth/login
 // @desc      Signin new user
 // @access    Public
-// exports.login = asyncHandler(async (req, res, next) => {
-//   const { email, password } = req.body;
+exports.login = asyncHandler(async (req, res, next) => {
+  const { email, password } = req.body;
 
-//   // *Express Validator
-//   const errors = validationResult(req);
-//   if (!errors.isEmpty()) {
-//     return res.status(400).json({
-//       success: false,
-//       message: errors.array({ onlyFirstError: true })[0].msg,
-//     });
-//   }
+  // * Check is email exist ?
+  const user = await User.findOne({ email: email }).select("+password");
+  if (!user) {
+    return res.status(400).json({
+      success: false,
+      message: "User / Password Doesn't Match or Exist",
+    });
+  }
 
-//   // * Check is email exist ?
-//   const user = await User.findOne({ email: email }).select("+password");
-//   if (!user) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "User / Password Doesn't Match or Exist",
-//     });
-//   }
+  // * Compare Password
+  const isMatch = await bcrypt.compare(password, user.password);
+  if (!isMatch) {
+    return res.status(400).json({
+      success: false,
+      message: "User / Password Doesn't Match or Exist",
+    });
+  }
 
-//   // * Compare Password
-//   const isMatch = await bcrypt.compare(password, user.password);
-//   if (!isMatch) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "User / Password Doesn't Match or Exist",
-//     });
-//   }
+  // * Send Back Data Without Sensitive Information
+  const data = await User.findOne({ email: email });
 
-//   // * Comment this block, if you wanna multiple device login
-//   // ? if you wanna more secure , uncomment it
-//   // * Generate New apiKey & save new Api Key
-//   const newApiKey = uniqid() + uniqid.process();
-//   user.apiKey = newApiKey;
-//   await user.save();
-
-//   // * Send Back Data Without Sensitive Information
-//   const data = await User.findOne({ email: email });
-
-//   res.status(200).json({ success: true, data });
-// });
+  res.status(200).json({ success: true, data });
+});
 
 // * @route   POST /api/auth/logout
 // @desc      Logout User

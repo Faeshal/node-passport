@@ -13,15 +13,12 @@ const userRoute = require("./route/user");
 
 // * Basick pkg
 app.use(express.json());
-app.use(morgan());
+app.use(morgan("dev"));
 
 // * Session
 app.use(
   session({
     secret: "tdVEZXp7DD",
-    store: new SequelizeStore({
-      db: sequelize,
-    }),
     resave: false,
     saveUninitialized: false,
   })
