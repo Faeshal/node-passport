@@ -10,6 +10,7 @@ log.level = "info";
 const session = require("express-session");
 const authRoute = require("./route/auth");
 const userRoute = require("./route/user");
+require("./middleware/passport")(passport);
 
 // * Basick pkg
 app.use(express.json());

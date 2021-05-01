@@ -1,6 +1,6 @@
 require("pretty-error").start();
 const asyncHandler = require("express-async-handler");
-const User = require("../model/user");
+const User = require("../model/User");
 const bcrypt = require("bcryptjs");
 const log = require("log4js").getLogger("auth");
 log.level = "info";
