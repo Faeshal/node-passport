@@ -40,6 +40,7 @@ exports.register = asyncHandler(async (req, res, next) => {
 // @access    Public
 exports.login = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
+  log.info("Masuk login");
 
   // * Check is email exist ?
   const user = await User.findOne({ email: email }).select("+password");
@@ -62,31 +63,33 @@ exports.login = asyncHandler(async (req, res, next) => {
   // * Send Back Data Without Sensitive Information
   const data = await User.findOne({ email: email });
 
+  log.info("session:", req.session);
+
   res.status(200).json({ success: true, data });
 });
 
 // * @route   POST /api/auth/logout
 // @desc      Logout User
 // @access    Private
-// exports.logout = asyncHandler(async (req, res, next) => {
-//   if (!req.session.user) {
-//     return res.status(400).json({
-//       success: false,
-//       message: "You Dont Have Any Session, Please Login to the system",
-//     });
-//   }
-//   // * Generate New apiKey
-//   const newApiKey = uniqid() + uniqid.process();
-//   await User.findOneAndUpdate({ _id: req.session.user }, { apiKey: newApiKey });
+exports.logout = asyncHandler(async (req, res, next) => {
+  if (!req.session.user) {
+    return res.status(400).json({
+      success: false,
+      message: "You Dont Have Any Session, Please Login to the system",
+    });
+  }
+  // * Generate New apiKey
+  const newApiKey = uniqid() + uniqid.process();
+  await User.findOneAndUpdate({ _id: req.session.user }, { apiKey: newApiKey });
 
-//   // * Destroy Session from DB
-//   req.session.destroy((err) => {
-//     if (err) {
-//       log.error(err);
-//     }
-//   });
-//   res.status(200).json({ success: true, message: "Successfully Logout" });
-// });
+  // * Destroy Session from DB
+  req.session.destroy((err) => {
+    if (err) {
+      log.error(err);
+    }
+  });
+  res.status(200).json({ success: true, message: "Successfully Logout" });
+});
 
 // * @route GET /api/auth/accounts
 // @desc    Get User Detail

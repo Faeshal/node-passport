@@ -7,10 +7,14 @@ const morgan = require("morgan");
 const passport = require("passport");
 const log = log4js.getLogger("entrypoint");
 log.level = "info";
+
 const session = require("express-session");
 const authRoute = require("./route/auth");
 const userRoute = require("./route/user");
-require("./middleware/passport")(passport);
+// require("./middleware/passport")(passport);
+require("./middleware/passport");
+app.use(passport.initialize());
+app.use(passport.session());
 
 // * Basick pkg
 app.use(express.json());
@@ -24,12 +28,14 @@ app.use(
     saveUninitialized: false,
   })
 );
-app.use(passport.initialize());
-app.use(passport.session());
 
 // * Routing
 app.use(authRoute);
 app.use(userRoute);
+
+app.get("/api/kunci", passport.authenticate("local"), (req, res, next) => {
+  res.json({ masuk: "hebat" });
+});
 
 app.get("/", (req, res) => {
   res.status(200).json({ success: false, message: "Welcome to Express" });
