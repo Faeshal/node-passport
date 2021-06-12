@@ -7,14 +7,11 @@ const morgan = require("morgan");
 const passport = require("passport");
 const log = log4js.getLogger("entrypoint");
 log.level = "info";
-
 const session = require("express-session");
+const LocalStrategy = require("passport-local").Strategy;
+const User = require("./model/User");
 const authRoute = require("./route/auth");
 const userRoute = require("./route/user");
-// require("./middleware/passport")(passport);
-require("./middleware/passport");
-app.use(passport.initialize());
-app.use(passport.session());
 
 // * Basick pkg
 app.use(express.json());
@@ -29,13 +26,35 @@ app.use(
   })
 );
 
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser(function (user, cb) {
+  cb(null, user);
+});
+
+passport.deserializeUser(function (obj, cb) {
+  cb(null, obj);
+});
+
+passport.use(
+  new LocalStrategy(function (username, password, done) {
+    User.findOne({ username: username }, function (err, user) {
+      if (err) {
+        return done(err);
+      }
+      if (!user) {
+        return done(null, false);
+      }
+      log.info("user:", user);
+      return done(null, user);
+    });
+  })
+);
+
 // * Routing
 app.use(authRoute);
 app.use(userRoute);
-
-app.get("/api/kunci", passport.authenticate("local"), (req, res, next) => {
-  res.json({ masuk: "hebat" });
-});
 
 app.get("/", (req, res) => {
   res.status(200).json({ success: false, message: "Welcome to Express" });

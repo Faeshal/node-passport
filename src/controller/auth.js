@@ -9,14 +9,14 @@ log.level = "info";
 // @desc      Signup new user
 // @access    Public
 exports.register = asyncHandler(async (req, res, next) => {
-  const { name, email, password } = req.body;
+  const { name, username, password } = req.body;
 
-  // * Check Double Email
-  const isExist = await User.findOne({ email: email });
+  // * Check Double Username
+  const isExist = await User.findOne({ username: username });
   if (isExist) {
     return res
       .status(400)
-      .json({ success: false, message: "Email Already Exist" });
+      .json({ success: false, message: "username Already Exist" });
   }
 
   // * Hash Password
@@ -24,14 +24,14 @@ exports.register = asyncHandler(async (req, res, next) => {
 
   const user = new User({
     name,
-    email,
+    username,
     password: hashedPw,
   });
   await user.save();
 
   res.status(200).json({
     success: true,
-    data: { name, email },
+    data: { name, username },
   });
 });
 
@@ -39,11 +39,11 @@ exports.register = asyncHandler(async (req, res, next) => {
 // @desc      Signin new user
 // @access    Public
 exports.login = asyncHandler(async (req, res, next) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
   log.info("Masuk login");
 
-  // * Check is email exist ?
-  const user = await User.findOne({ email: email }).select("+password");
+  // * Check is username exist ?
+  const user = await User.findOne({ username: username }).select("+password");
   if (!user) {
     return res.status(400).json({
       success: false,
@@ -61,7 +61,7 @@ exports.login = asyncHandler(async (req, res, next) => {
   }
 
   // * Send Back Data Without Sensitive Information
-  const data = await User.findOne({ email: email });
+  const data = await User.findOne({ username: username });
 
   log.info("session:", req.session);
 
@@ -95,6 +95,7 @@ exports.logout = asyncHandler(async (req, res, next) => {
 // @desc    Get User Detail
 // @access  Private
 exports.getAccountInfo = asyncHandler(async (req, res, next) => {
-  const data = await User.findById(req.session.user);
+  const data = await User.findById(req.session.passport.user._id);
+  console.log("SESSIONNYA NIH BOS:", req.session);
   return res.status(200).json({ success: true, data });
 });
