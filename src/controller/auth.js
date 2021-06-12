@@ -4,6 +4,7 @@ const User = require("../model/User");
 const bcrypt = require("bcryptjs");
 const log = require("log4js").getLogger("auth");
 log.level = "info";
+const passport = require("passport");
 
 // * @route   POST /api/auth/register
 // @desc      Signup new user
@@ -41,24 +42,6 @@ exports.register = asyncHandler(async (req, res, next) => {
 exports.login = asyncHandler(async (req, res, next) => {
   const { username, password } = req.body;
   log.info("Masuk login");
-
-  // * Check is username exist ?
-  const user = await User.findOne({ username: username }).select("+password");
-  if (!user) {
-    return res.status(400).json({
-      success: false,
-      message: "User / Password Doesn't Match or Exist",
-    });
-  }
-
-  // * Compare Password
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
-    return res.status(400).json({
-      success: false,
-      message: "User / Password Doesn't Match or Exist",
-    });
-  }
 
   // * Send Back Data Without Sensitive Information
   const data = await User.findOne({ username: username });

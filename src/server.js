@@ -12,6 +12,7 @@ const LocalStrategy = require("passport-local").Strategy;
 const User = require("./model/User");
 const authRoute = require("./route/auth");
 const userRoute = require("./route/user");
+const bcrypt = require("bcryptjs");
 
 // * Basick pkg
 app.use(express.json());
@@ -38,23 +39,27 @@ passport.deserializeUser(function (obj, cb) {
 });
 
 passport.use(
-  new LocalStrategy(function (username, password, done) {
-    User.findOne({ username: username }, function (err, user) {
-      if (err) {
-        return done(err);
-      }
-      if (!user) {
-        return done(null, false);
-      }
-      log.info("user:", user);
-      return done(null, user);
-    });
+  new LocalStrategy(async function (username, password, done, req, res) {
+    let user;
+    user = await User.findOne({ username: username });
+    if (!user) {
+      return done(null, false);
+    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return done(null, false);
+    }
+    return done(null, user);
   })
 );
 
 // * Routing
 app.use(authRoute);
 app.use(userRoute);
+
+app.get("/failedlogin", (req, res) => {
+  res.status(401).json({ success: false, message: "User/Password Invalid" });
+});
 
 app.get("/", (req, res) => {
   res.status(200).json({ success: false, message: "Welcome to Express" });
